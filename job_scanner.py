@@ -35,6 +35,10 @@ while True:
     else:
         print(filepath.decode("utf-8"))
         # send job to rq-worker-put
+        # queue up uid, gid for quota_updater
+        # stat
+        # r.sadd("arcuid",uid)
+        # r.sadd("arcgid",gid)
 
 # get scanner
 while True:
@@ -53,6 +57,12 @@ while True:
     else:
         print(filepath.decode("utf-8"))
         # delete file entry in arcdb.obj, data on tape remain until overwritten
+        # queue up uid, gid for quota_updater
+        # query arcdb for uid gid
+        # r.sadd("arcuid",uid)
+        # r.sadd("arcgid",gid)
+
+# call quota_updater for uid, gid saved in this scan
 
 ## end while true sleep loop
 
