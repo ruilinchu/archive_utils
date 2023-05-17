@@ -3,11 +3,14 @@
 # scans for redis dataset for data actions: put, get, delete
 # send job to rq-worker-put,get 
 
-import redis
-import pymongo
+from redis import Redis
+from pymongo import MongoClient
+from rq import Queue
 
-r=redis.Redis(host='127.0.0.1')
-m=pymongo.MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
+r=Redis(host='127.0.0.1')
+m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
+q=Queue(connection=r)
+
 print(m.list_database_names())
 
 # put dummy data in arcput,arcget dataset
@@ -22,9 +25,9 @@ print(r.smembers("arcput"))
 print(r.smembers("arcget"))
 print(r.smembers("arcdel"))
 
-## start while true, sleep(60) loop
-# put scanner
+## start while true, sleep(60) loop, will run as systemd service
 
+# put scanner
 while True:
     filepath=r.spop("arcput")
     if filepath is None:
@@ -34,7 +37,6 @@ while True:
         # send job to rq-worker-put
 
 # get scanner
-
 while True:
     filepath=r.spop("arcget")
     if filepath is None:
