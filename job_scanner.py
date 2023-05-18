@@ -6,6 +6,9 @@
 from redis import Redis
 from pymongo import MongoClient
 from rq import Queue
+import os
+import traceback
+import logging
 
 r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
@@ -35,13 +38,31 @@ while True:
         break
     else:
         print(filepath.decode("utf-8"))
-        # send job to rq-worker-put
-        # qput.enqueue(putfile, filepath.decode("utf-8"))
-
-        # queue up uid, gid for quota_updater
+        fpath=filepath.decode("utf-8")
+        filename=os.path.basename(fpath)
+        parent=os.path.dirname(fpath)
+        objname=fpath
         # stat
-        # r.sadd("arcuid",uid)
-        # r.sadd("arcgid",gid)
+        try:
+            ost=os.stat(fpath)
+        except Exception as e:
+            logging.error(traceback.format_exc())
+
+        uid=ost.st_uid
+        gid=ost.st_gid
+        fsize=ost.st_size
+        ftime=ost.st_ctime
+        # insert mongodb record
+        try:
+            m.arcdb.obj.insert_one("filename": filename, "parent": parent, "objname": objname, "uid": uid, "gid": gid, size: fsize, "timestamp": ftime)
+        except Exception as e:
+            logging.error(traceback.format_exc())
+
+        # send job to rq-worker-put, original file removed after job finish
+        qput.enqueue(putfile, fpath)
+
+        # queue up gid for quota_updater after this round of scan
+        r.sadd("arcgid",gid)
 
 # get scanner
 while True:
@@ -63,12 +84,11 @@ while True:
         # delete file entry in arcdb.obj
         # call phobos delete, data on tape remain until overwritten
 
-        # queue up uid, gid for quota_updater
+        # queue up gid for quota_updater
         # query arcdb for uid gid
-        # r.sadd("arcuid",uid)
         # r.sadd("arcgid",gid)
 
-# call quota_updater for uid, gid saved in this scan
+# call quota_updater for gid saved in this scan
 
 ## end while true sleep loop
 
