@@ -9,7 +9,8 @@ from rq import Queue
 
 r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
-q=Queue(connection=r)
+qput=Queue("phoboput",connection=r)
+qget=Queue("phoboget",connection=r)
 
 print(m.list_database_names())
 
@@ -35,6 +36,8 @@ while True:
     else:
         print(filepath.decode("utf-8"))
         # send job to rq-worker-put
+        # qput.enqueue(putfile, filepath.decode("utf-8"))
+
         # queue up uid, gid for quota_updater
         # stat
         # r.sadd("arcuid",uid)
@@ -48,6 +51,7 @@ while True:
     else:
         print(filepath.decode("utf-8"))
         # send job to rq-worker-get
+        # qget.enqueue(getfile, filepath.decode("utf-8"))
 
 # delete scanner
 while True:
@@ -56,7 +60,9 @@ while True:
         break
     else:
         print(filepath.decode("utf-8"))
-        # delete file entry in arcdb.obj, data on tape remain until overwritten
+        # delete file entry in arcdb.obj
+        # call phobos delete, data on tape remain until overwritten
+
         # queue up uid, gid for quota_updater
         # query arcdb for uid gid
         # r.sadd("arcuid",uid)
