@@ -29,6 +29,9 @@ if uid != os.getuid():
     print("Error: "+fullpath+" is not owned by you")
     quit()
 
+r=Redis(host='127.0.0.1')
+m=MongoClient("mongodb://hpcuser:12345@127.0.0.1/arcdb")
+
 # check if objname already in arcdb
 
 # check if over group quota
