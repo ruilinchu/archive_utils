@@ -9,11 +9,12 @@ from rq import Queue
 import os
 import traceback
 import logging
+from arc_utils import put2tape
 
 r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
-qput=Queue("phoboput",connection=r)
-qget=Queue("phoboget",connection=r)
+qput=Queue("phobosput",connection=r)
+qget=Queue("phobosget",connection=r)
 
 print(m.list_database_names())
 
@@ -45,21 +46,21 @@ while True:
         # stat
         try:
             ost=os.stat(fpath)
+            uid=ost.st_uid
+            gid=ost.st_gid
+            fsize=ost.st_size
+            ftime=ost.st_ctime
         except Exception as e:
             logging.error(traceback.format_exc())
 
-        uid=ost.st_uid
-        gid=ost.st_gid
-        fsize=ost.st_size
-        ftime=ost.st_ctime
         # insert mongodb record
         try:
-            m.arcdb.obj.insert_one("filename": filename, "parent": parent, "objname": objname, "uid": uid, "gid": gid, size: fsize, "timestamp": ftime)
+            m.arcdb.obj.insert_one({"filename": filename, "parent": parent, "objname": objname, "uid": uid, "gid": gid, size: fsize, "timestamp": ftime})
         except Exception as e:
             logging.error(traceback.format_exc())
 
         # send job to rq-worker-put, original file removed after job finish
-        qput.enqueue(putfile, fpath)
+        qput.enqueue(put2tape, fpath, objname)
 
         # queue up gid for quota_updater after this round of scan
         r.sadd("arcgid",gid)
@@ -81,12 +82,15 @@ while True:
         break
     else:
         print(filepath.decode("utf-8"))
-        # delete file entry in arcdb.obj
-        # call phobos delete, data on tape remain until overwritten
+        fpath=filepath.decode("utf-8")
 
-        # queue up gid for quota_updater
-        # query arcdb for uid gid
-        # r.sadd("arcgid",gid)
+
+        # call phobos delete, data on tape remain until overwritten
+        os.system('/bin/phobos delete '+fpath)
+        # queue up gid for quota_updater, query arcdb for gid
+
+        r.sadd("arcgid",gid)
+        # delete file entry in arcdb.obj
 
 # call quota_updater for gid saved in this scan
 
