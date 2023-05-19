@@ -4,14 +4,13 @@ from redis import Redis
 from pymongo import MongoClient
 import os
 import sys
-import traceback
 
 # check argument, print usage
 if len(sys.argv) > 1:
     filename=sys.argv[1]
     fullpath=os.path.abspath(filename)
 else:
-    print("Error: Please input file name")
+    print("Error: Please input file name!")
     quit()
 
 # check if abspath contains space
@@ -26,16 +25,21 @@ gid=ost.st_gid
 
 # verify ownership
 if uid != os.getuid():
-    print("Error: "+fullpath+" is not owned by you")
+    print("Error: "+fullpath+" is not owned by you!")
     quit()
 
 r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://hpcuser:12345@127.0.0.1/arcdb")
 
 # check if objname already in arcdb
+if len(list(m.arcdb.obj.find({"objname": fullpath}))) != 0:
+    print("Error: "+fullpath+" already exists on tape!")
+    quit()
 
 # check if over group quota
 
 # send abspath to putdb redis dataset
+r.sadd("arcput",fullpath)
 
 # message wait
+print("Sending file "+fullpath+" to archive tape library, wait and check back later with arcls")
