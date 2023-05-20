@@ -9,26 +9,17 @@ from rq import Queue
 import os
 import traceback
 import logging
+import datetime
 from arc_utils import put2tape
+from arc_utils import getfromtape
 
 r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
 qput=Queue("phobosput",connection=r)
 qget=Queue("phobosget",connection=r)
 
-print(m.list_database_names())
-
-# put dummy data in arcput,arcget dataset
-for x in range(10):
-    filename="file"+str(x)
-    r.sadd("arcput","/put/some/"+filename)
-    r.sadd("arcget","/get/some/"+filename)
-    r.sadd("arcdel","/del/some/"+filename)
-
-
-print(r.smembers("arcput"))
-print(r.smembers("arcget"))
-print(r.smembers("arcdel"))
+logging.basicConfig(filename='/var/log/archive/scanner.log', format='%(asctime)s %(message)s', \
+                    filemode='a', level=logging.ERROR)
 
 ## start while true, sleep(60) loop, will run as systemd service
 
@@ -38,32 +29,14 @@ while True:
     if filepath is None:
         break
     else:
-        print(filepath.decode("utf-8"))
+        ## input is a full abspath
         fpath=filepath.decode("utf-8")
-        filename=os.path.basename(fpath)
-        parent=os.path.dirname(fpath)
-        objname=fpath
-        # stat
-        try:
-            ost=os.stat(fpath)
-            uid=ost.st_uid
-            gid=ost.st_gid
-            fsize=ost.st_size
-            ftime=ost.st_ctime
-        except Exception as e:
-            logging.error(traceback.format_exc())
+        print(fpath)
 
-        # insert mongodb record
-        try:
-            m.arcdb.obj.insert_one({"filename": filename, "parent": parent, "objname": objname, "uid": uid, "gid": gid, size: fsize, "timestamp": ftime})
-        except Exception as e:
-            logging.error(traceback.format_exc())
-
-        # send job to rq-worker-put, original file removed after job finish
-        qput.enqueue(put2tape, fpath, objname)
-
-        # queue up gid for quota_updater after this round of scan
-        r.sadd("arcgid",gid)
+        # send job to rq-worker-put, original file stays
+        qput.enqueue(put2tape, fpath)
+        logging.error(fpath)
+        
 
 # get scanner
 while True:
@@ -73,7 +46,7 @@ while True:
     else:
         print(filepath.decode("utf-8"))
         # send job to rq-worker-get
-        # qget.enqueue(getfile, filepath.decode("utf-8"))
+        qget.enqueue(getfromtape, filepath.decode("utf-8"))
 
 # delete scanner
 while True:
