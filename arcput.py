@@ -32,7 +32,7 @@ r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://hpcuser:12345@127.0.0.1/arcdb")
 
 # check if objname already in arcdb
-if len(list(m.arcdb.obj.find({"objname": fullpath}))) != 0:
+if len(list(m.arcdb.obj.find({"filename": fullpath}))) != 0:
     print("Error: "+fullpath+" already exists on tape!")
     quit()
 
