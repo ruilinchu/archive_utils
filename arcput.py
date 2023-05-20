@@ -19,9 +19,13 @@ if ' ' in fullpath:
     quit()
 
 # validate file
-ost=os.stat(fullpath)
-uid=ost.st_uid
-gid=ost.st_gid
+if os.path.isfile(fullpath):
+    ost=os.stat(fullpath)
+    uid=ost.st_uid
+    gid=ost.st_gid
+else:
+    print("Error: input is not a file!")
+    quit()
 
 # verify ownership
 if uid != os.getuid():
