@@ -15,7 +15,7 @@ def put2tape(filepath):
         uid=ost.st_uid
         gid=ost.st_gid
         fsize=ost.st_size
-        ftime=datetime.fromtimestamp(ost.st_ctime)
+        ftime=str(datetime.fromtimestamp(ost.st_ctime))
     except Exception as e:
         logging.error(traceback.format_exc())
     
@@ -26,7 +26,7 @@ def put2tape(filepath):
     try:
         # queue up gid for quota_updater
         r.sadd("arcgid",gid)
-        m.arcdb.obj.insert_one({"filename": fpath, "uid": uid, "gid": gid, size: fsize, "timestamp": ftime})
+        m.arcdb.obj.insert_one({"filename": filepath, "uid": uid, "gid": gid, "size": fsize, "timestamp": ftime})
     except Exception as e:
         logging.error(traceback.format_exc())
 
