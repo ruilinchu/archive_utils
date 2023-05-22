@@ -2,15 +2,16 @@
 
 from redis import Redis
 from pymongo import MongoClient
-import os
-import sys
+from os import stat, path, getuid
+from sys import argv
 
 # check argument, print usage
-if len(sys.argv) > 1:
-    filename=sys.argv[1]
-    fullpath=os.path.abspath(filename)
+if len(argv) > 1:
+    filename=argv[1]
+    fullpath=path.abspath(filename)
 else:
     print("Error: Please input file name!")
+    print("Usage: arcput filename")
     quit()
 
 # check if abspath contains space
@@ -19,8 +20,8 @@ if ' ' in fullpath:
     quit()
 
 # validate file
-if os.path.isfile(fullpath):
-    ost=os.stat(fullpath)
+if path.isfile(fullpath):
+    ost=stat(fullpath)
     uid=ost.st_uid
     gid=ost.st_gid
 else:
@@ -28,7 +29,7 @@ else:
     quit()
 
 # verify ownership
-if uid != os.getuid():
+if uid != getuid():
     print("Error: "+fullpath+" is not owned by you!")
     quit()
 
@@ -40,7 +41,7 @@ if len(list(m.arcdb.obj.find({"filename": fullpath}))) != 0:
     print("Error: "+fullpath+" already exists on tape!")
     quit()
 
-# check if over group quota
+# check if over group quota, check num of file and size
 
 # send abspath to putdb redis dataset
 r.sadd("arcput",fullpath)
