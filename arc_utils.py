@@ -61,7 +61,7 @@ def getfromtape(objname):
 
     return x
 
-def delfromtape(objname)
+def delfromtape(objname):
     #data on tape remain until overwritten, filename = objname
     m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
     r=Redis(host='127.0.0.1')
