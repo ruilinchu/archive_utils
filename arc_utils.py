@@ -32,6 +32,8 @@ def put2tape(filepath):
 def getfromtape(objname):
     # filename = objname
     m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
+    r=Redis(host='127.0.0.1')
+
     docl=list(m.arcdb.obj.find({"filename":objname},{"uid":1,"gid":1,"_id":0}))
     if len(docl) == 0:
         print("Error: "+objname+" does not exist on tape")
@@ -39,6 +41,13 @@ def getfromtape(objname):
 
     doc=docl[0]
     
+    # check if is already working on it
+    if r.sismember("workingget",objname):
+        print("Error: already working on a get file")
+        return 1
+    else:
+        r.sadd("workingget",objname)
+
     targetdir=path.dirname(objname)
     x=system('mkdir -p '+targetdir+ ' && /bin/phobos get '+objname+' '+objname)
 
@@ -47,4 +56,32 @@ def getfromtape(objname):
     gid=str(doc['gid'])
     system('chown '+uid+':'+gid+' '+objname)
 
+    # remove from working on list
+    r.srem("workingget",objname)
+
     return x
+
+def delfromtape(objname)
+    #data on tape remain until overwritten, filename = objname
+    m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
+    r=Redis(host='127.0.0.1')
+
+    docl=list(m.arcdb.obj.find({"filename":objname},{"uid":1,"gid":1,"_id":0}))
+    if len(docl) == 0:
+        print("Error: "+objname+" does not exist on tape")
+        return 1
+
+    doc=docl[0]
+
+    x=system('/bin/phobos delete '+objname)
+
+    # queue up gid for quota_updater, query arcdb for gid
+    gid=str(doc['gid'])
+    r.sadd("arcgid",gid)
+    
+    # delete file entry in arcdb.obj
+    m.arcdb.obj.delete_one({"filename": objname})
+
+    return x
+
+

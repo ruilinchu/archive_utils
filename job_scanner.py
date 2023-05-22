@@ -17,6 +17,7 @@ r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
 qput=Queue("phobosput",connection=r)
 qget=Queue("phobosget",connection=r)
+qdel=Queue("phobosdel",connection=r)
 
 logging.basicConfig(filename='/var/log/archive/scanner.log', format='%(asctime)s %(message)s', \
                     filemode='a', level=logging.ERROR)
@@ -35,8 +36,7 @@ while True:
 
         # send job to rq-worker-put, original file stays
         qput.enqueue(put2tape, fpath)
-        logging.error(fpath)
-        
+        logging.error("PUT: "+fpath)
 
 # get scanner
 while True:
@@ -44,9 +44,12 @@ while True:
     if filepath is None:
         break
     else:
-        print(filepath.decode("utf-8"))
+        fpath=filepath.decode("utf-8")
+        print(fpath)
+
         # send job to rq-worker-get
-        qget.enqueue(getfromtape, filepath.decode("utf-8"))
+        qget.enqueue(getfromtape, fpath)
+        logging.error("GET: "+fpath)
 
 # delete scanner
 while True:
@@ -54,18 +57,15 @@ while True:
     if filepath is None:
         break
     else:
-        print(filepath.decode("utf-8"))
         fpath=filepath.decode("utf-8")
+        print(fpath)
+
+        # send job to rq-worker-delete
+        qdel.enqueue(delfromtape, fpath)
+        logging.error("DEL: "+fpath)
 
 
-        # call phobos delete, data on tape remain until overwritten
-        os.system('/bin/phobos delete '+fpath)
-        # queue up gid for quota_updater, query arcdb for gid
-
-        r.sadd("arcgid",gid)
-        # delete file entry in arcdb.obj
-
-# call quota_updater for gid saved in this scan
+# use another periodic quota_updater for gid 
 
 ## end while true sleep loop
 
