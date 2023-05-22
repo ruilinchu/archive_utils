@@ -31,12 +31,18 @@ def put2tape(filepath):
 
 def getfromtape(objname):
     # filename = objname
+    m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
+    docl=list(m.arcdb.obj.find({"filename":objname},{"uid":1,"gid":1,"_id":0}))
+    if len(docl) == 0:
+        print("Error: "+objname+" does not exist on tape")
+        return 1
+
+    doc=docl[0]
+    
     targetdir=path.dirname(objname)
-    x=system('mkdir -p '+targetdir+ ' && /bin/phobos get '+objname+' '+targetdir)
+    x=system('mkdir -p '+targetdir+ ' && /bin/phobos get '+objname+' '+objname)
 
     # restore ownership
-    m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
-    doc=list(m.arcdb.obj.find({"filename":objname},{"uid":1,"gid":1,"_id":0}))[0]
     uid=str(doc['uid'])
     gid=str(doc['gid'])
     system('chown '+uid+':'+gid+' '+objname)
