@@ -1,0 +1,17 @@
+[Unit]
+Description=for phobos del queue RQ Worker
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/archive_utils/
+User=root
+Group=root
+ExecStart=/usr/local/bin/rqworker phobosdel
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=false
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
