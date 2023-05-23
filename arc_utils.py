@@ -12,6 +12,13 @@ def put2tape(filepath):
         print("Error: "+filepath+" aready on Tape")
         return 1
 
+    # check if is already working on it
+    if r.sismember("workingput",filepath):
+        print("Error: already working on a put file")
+        return 1
+    else:
+        r.sadd("workingput",filepath)
+
     # stat
     ost=stat(filepath)
     uid=ost.st_uid
@@ -26,6 +33,9 @@ def put2tape(filepath):
     # queue up gid for quota_updater
     r.sadd("arcgid",gid)
     m.arcdb.obj.insert_one({"filename": filepath, "uid": uid, "gid": gid, "size": fsize, "timestamp": ftime})
+
+    # remove from working on list
+    r.srem("workingput",filepath)
 
     return x
 

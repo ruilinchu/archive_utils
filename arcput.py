@@ -41,6 +41,11 @@ if len(list(m.arcdb.obj.find({"filename": fullpath}))) != 0:
     print("Error: "+fullpath+" already exists on tape!")
     quit()
 
+# check if already working on it
+if r.sismember("workingput",fullpath):
+    print("Error: already working on it")
+    quit()
+
 # check if over group quota, check num of file and size
 
 # send abspath to putdb redis dataset
