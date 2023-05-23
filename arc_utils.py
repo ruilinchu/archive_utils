@@ -86,7 +86,7 @@ def delfromtape(objname):
     x=system('/bin/phobos delete '+objname)
 
     # queue up gid for quota_updater, query arcdb for gid
-    gid=str(doc['gid'])
+    gid=doc['gid']
     r.sadd("arcgid",gid)
     
     # delete file entry in arcdb.obj

@@ -2,7 +2,7 @@
 
 from redis import Redis
 from pymongo import MongoClient
-from os import path
+from os import path,getuid
 from sys import argv
 
 # check argument, print usage
@@ -21,8 +21,17 @@ if path.isfile(fullpath):
     print("Error: File already exists locally")
     quit()
 
-if len(list(m.arcdb.obj.find({"filename":fullpath}))) == 0:
+# verify ownership
+docl=list(m.arcdb.obj.find({"filename":fullpath},{"uid":1,"gid":1,"_id":0}))
+if len(docl) == 0:
     print("Error: "+fullpath+" does not exist on tape")
+    quit()
+
+doc=docl[0]
+uid=doc['uid']
+
+if uid != getuid():
+    print("Error: "+fullpath+" is not owned by you!")
     quit()
 
 # check if is already working on it

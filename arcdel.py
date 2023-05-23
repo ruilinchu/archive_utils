@@ -25,8 +25,6 @@ if len(docl) == 0:
 
 doc=docl[0]
 uid=doc['uid']
-print(doc)
-print(uid)
 
 if uid != getuid():
     print("Error: "+fullpath+" is not owned by you!")
