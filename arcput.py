@@ -1,8 +1,7 @@
 #!/bin/python3
 
-from redis import Redis
 from pymongo import MongoClient
-from os import stat, path, getuid
+from os import stat, path, getuid, system
 from sys import argv
 
 # check argument, print usage
@@ -33,7 +32,6 @@ if uid != getuid():
     print("Error: "+fullpath+" is not owned by you!")
     quit()
 
-r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://hpcuser:12345@127.0.0.1/arcdb")
 
 # check if objname already in arcdb
@@ -41,15 +39,10 @@ if len(list(m.arcdb.obj.find({"filename": fullpath}))) != 0:
     print("Error: "+fullpath+" already exists on tape!")
     quit()
 
-# check if already working on it
-if r.sismember("workingput",fullpath):
-    print("Error: already working on it")
-    quit()
-
-# check if over group quota, check num of file and size
+# check if over group quota, inc num of file and size
 
 # send abspath to putdb redis dataset
-r.sadd("arcput",fullpath)
+system('/bin/sendit put '+fullpath)
 
 # message wait
 print("Sending file "+fullpath+" to archive tape library, wait and check back later with arcls")

@@ -12,7 +12,7 @@ import logging
 import datetime
 from arc_utils import put2tape,getfromtape,delfromtape
 
-r=Redis(host='127.0.0.1')
+r=Redis(host='127.0.0.1',password='aabbccddeeffgg')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
 qput=Queue("phobosput",connection=r)
 qget=Queue("phobosget",connection=r)

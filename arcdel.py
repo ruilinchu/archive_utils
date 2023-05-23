@@ -1,8 +1,7 @@
 #!/bin/python3
 
-from redis import Redis
 from pymongo import MongoClient
-from os import stat, path, getuid
+from os import stat, path, getuid, system
 from sys import argv
 
 # check argument, print usage
@@ -14,7 +13,6 @@ else:
     print("Usage: arcdel fullpath_filename")
     quit()
 
-r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://hpcuser:12345@127.0.0.1/arcdb")
 
 # verify ownership
@@ -32,10 +30,9 @@ if uid != getuid():
 
 # ask to confirm
 if input("are you sure to delete this file from tape? (y/n)") == "y":
-    # send abspath to putdb redis dataset   
-    r.sadd("arcdel",fullpath)
+    system('/bin/sendit del '+fullpath)
 
     # message 
     print("Deleted file "+fullpath+" from archive tape library")
-
-
+else:
+    print("aborting")

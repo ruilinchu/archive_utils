@@ -5,7 +5,7 @@ from redis import Redis
 
 def put2tape(filepath):
     m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
-    r=Redis(host='127.0.0.1')
+    r=Redis(host='127.0.0.1',password='aabbccddeeffgg')
     
     # check if already in mongodb, repeat action
     if len(list(m.arcdb.obj.find({"filename": filepath}))) != 0:    
@@ -45,7 +45,7 @@ def put2tape(filepath):
 def getfromtape(objname):
     # filename = objname
     m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
-    r=Redis(host='127.0.0.1')
+    r=Redis(host='127.0.0.1',password='aabbccddeeffgg')
 
     docl=list(m.arcdb.obj.find({"filename":objname},{"uid":1,"gid":1,"_id":0}))
     if len(docl) == 0:
@@ -80,7 +80,7 @@ def getfromtape(objname):
 def delfromtape(objname):
     #data on tape remain until overwritten, filename = objname
     m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
-    r=Redis(host='127.0.0.1')
+    r=Redis(host='127.0.0.1',password='aabbccddeeffgg')
 
     docl=list(m.arcdb.obj.find({"filename":objname},{"uid":1,"gid":1,"_id":0}))
     if len(docl) == 0:

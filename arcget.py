@@ -1,8 +1,7 @@
 #!/bin/python3
 
-from redis import Redis
 from pymongo import MongoClient
-from os import path,getuid
+from os import path, getuid, system
 from sys import argv
 
 # check argument, print usage
@@ -15,7 +14,6 @@ else:
     quit()
 
 m=MongoClient("mongodb://hpcuser:12345@127.0.0.1/arcdb")
-r=Redis(host='127.0.0.1')
 
 if path.isfile(fullpath):
     print("Error: File already exists locally")
@@ -34,13 +32,7 @@ if uid != getuid():
     print("Error: "+fullpath+" is not owned by you!")
     quit()
 
-# check if is already working on it
-if r.sismember("workingget",fullpath):
-    print("Error: already working on it")
-    quit()
-
-# send abspath to getdb redis dataset
-r.sadd("arcget",fullpath)
+system('/bin/sendit get '+fullpath)
 
 # message wait
 print("Retreiving file "+fullpath+" from archive tape library, wait and check back later")
