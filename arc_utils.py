@@ -18,21 +18,24 @@ def put2tape(filepath):
         return 1
     else:
         r.sadd("workingput",filepath)
-
-    # stat
-    ost=stat(filepath)
-    uid=ost.st_uid
-    gid=ost.st_gid
-    fsize=ost.st_size
-    ftime=str(datetime.fromtimestamp(ost.st_ctime))
     
-    #x=system('/bin/phobos put -f tape '+filepath+' '+filepath)
-    x=system('/bin/phobos put -f dir '+filepath+' '+filepath)
-    
-    # insert mongodb record
-    # queue up gid for quota_updater
-    r.sadd("arcgid",gid)
-    m.arcdb.obj.insert_one({"filename": filepath, "uid": uid, "gid": gid, "size": fsize, "timestamp": ftime})
+    try:
+        # stat
+        ost=stat(filepath)
+        uid=ost.st_uid
+        gid=ost.st_gid
+        fsize=ost.st_size
+        ftime=str(datetime.fromtimestamp(ost.st_ctime))
+        
+        #x=system('/bin/phobos put -f tape '+filepath+' '+filepath)
+        x=system('/bin/phobos put -f dir '+filepath+' '+filepath)
+        
+        # insert mongodb record
+        # queue up gid for quota_updater
+        r.sadd("arcgid",gid)
+        m.arcdb.obj.insert_one({"filename": filepath, "uid": uid, "gid": gid, "size": fsize, "timestamp": ftime})
+    except:
+        pass
 
     # remove from working on list
     r.srem("workingput",filepath)
@@ -57,14 +60,17 @@ def getfromtape(objname):
         return 1
     else:
         r.sadd("workingget",objname)
+        
+    try:
+        targetdir=path.dirname(objname)
+        x=system('mkdir -p '+targetdir+ ' && /bin/phobos get '+objname+' '+objname)
 
-    targetdir=path.dirname(objname)
-    x=system('mkdir -p '+targetdir+ ' && /bin/phobos get '+objname+' '+objname)
-
-    # restore ownership
-    uid=str(doc['uid'])
-    gid=str(doc['gid'])
-    system('chown '+uid+':'+gid+' '+objname)
+        # restore ownership
+        uid=str(doc['uid'])
+        gid=str(doc['gid'])
+        system('chown '+uid+':'+gid+' '+objname)
+    except:
+        pass
 
     # remove from working on list
     r.srem("workingget",objname)
