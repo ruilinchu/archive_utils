@@ -10,8 +10,7 @@ import os
 import traceback
 import logging
 import datetime
-from arc_utils import put2tape
-from arc_utils import getfromtape
+from arc_utils import put2tape,getfromtape,delfromtape
 
 r=Redis(host='127.0.0.1')
 m=MongoClient("mongodb://phobos:phobos@127.0.0.1/arcdb")
