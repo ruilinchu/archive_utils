@@ -44,7 +44,7 @@ def put2tape(filepatho):
     doc=list(m.arcdb.quotagroup.find({"gid":gid},{"_id":0}))
     if len(doc) == 0:
         pass
-    elif doc[0][size] > doc[0][sizelimit] or doc[0][num] > doc[0][numlimit]:
+    elif doc[0]['size'] > doc[0]['sizelimit'] or doc[0]['num'] > doc[0]['numlimit']:
         print("Error: group quota exceeded GID "+str(gid))
         r.srem("workingput",filepath)
         return 1
