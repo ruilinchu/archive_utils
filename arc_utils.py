@@ -37,14 +37,23 @@ def put2tape(filepatho):
         return 1
 
     if uid != int(uido):
+        r.srem("workingput",filepath)
         raise Exception("Alert: someone is sending redis key manually for other user's data !!!")
 
+    # check if over group quota
+    doc=list(m.arcdb.quotagroup.find({"gid":gid},{"_id":0}))
+    if len(doc) == 0:
+        pass
+    elif doc[0][size] > doc[0][sizelimit] or doc[0][num] > doc[0][numlimit]:
+        print("Error: group quota exceeded GID "+str(gid))
+        r.srem("workingput",filepath)
+        return 1
+        
     try:
         #x=system('/bin/phobos put -f tape '+filepath+' '+filepath)
         x=system('/bin/phobos put -f dir '+filepath+' '+filepath)
         
-        # insert mongodb record
-        # queue up gid for quota_updater
+        # insert mongodb record, queue up gid for quota_updater
         r.sadd("arcgid",gid)
         m.arcdb.obj.insert_one({"filename": filepath, "uid": uid, "gid": gid, "size": fsize, "timestamp": ftime})
     except:
