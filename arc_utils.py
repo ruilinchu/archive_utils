@@ -30,11 +30,16 @@ def put2tape(filepatho):
         gid=ost.st_gid
         fsize=ost.st_size
         ftime=str(datetime.fromtimestamp(ost.st_ctime))
-        
-        if uid != int(uido):
-            print("Alert: someone is sending redis key manually for other user's data !!!")
-            return 1
+    except:
+        # remove from working on list
+        print("Error: file stat failed for path"+fullpath)
+        r.srem("workingput",filepath) 
+        return 1
 
+    if uid != int(uido):
+        raise Exception("Alert: someone is sending redis key manually for other user's data !!!")
+
+    try:
         #x=system('/bin/phobos put -f tape '+filepath+' '+filepath)
         x=system('/bin/phobos put -f dir '+filepath+' '+filepath)
         
@@ -74,13 +79,12 @@ def getfromtape(objnameo):
     else:
         r.sadd("workingget",objname)
         
-    try:
-        uid=str(doc['uid'])
-        gid=str(doc['gid'])
-        if uid != uido:
-            print("Alert: someone is sending redis key manually to get other user's data !!!")
-            return 1
+    uid=str(doc['uid'])
+    gid=str(doc['gid'])
+    if uid != uido:
+        raise Exception("Alert: someone is sending redis key manually to get other user's data !!!")
 
+    try:
         targetdir=path.dirname(objname)
         x=system('mkdir -p '+targetdir+ ' && /bin/phobos get '+objname+' '+objname)
 
@@ -111,8 +115,7 @@ def delfromtape(objnameo):
     doc=docl[0]
     uid=str(doc['uid'])
     if uid != uido:
-        print("Alert: someone is sending redis key manually to delete other user's data !!!")
-        return 1
+        raise Exception("Alert: someone is sending redis key manually to delete other user's data !!!")
 
     x=system('/bin/phobos delete '+objname)
 
