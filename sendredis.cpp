@@ -1,5 +1,8 @@
 #include <sw/redis++/redis++.h>
 #include <iostream>
+#include <unistd.h>
+#include <string>
+
 using namespace sw::redis;
 using namespace std;
 
@@ -23,19 +26,22 @@ int main(int argc, char* argv[]) {
   string si("tcp://default:");
 
   string fu=si + sa + sb + sc + sd + se + sf + sg + sh;
+  string sla("/");
+  string sendkey=argv[2] + sla + to_string(getuid());
+
  // cout << fu << endl;
   
   auto redis = Redis(fu);
 
   if(argv[1] == str_put){
-//    cout << "putting a file: " << argv[2] << endl;
-    redis.sadd(aput, argv[2]);
+    //    cout << "putting a file: " << sendkey << endl;
+    redis.sadd(aput, sendkey);
   } else if(argv[1] == str_get){
-//    cout << "getting a file: " << endl;
-    redis.sadd(aget, argv[2]);
+    //    cout << "getting a file: " << sendkey << endl;
+    redis.sadd(aget, sendkey);
   } else if(argv[1] == str_del){
-//    cout << "deleting a file" << endl;
-    redis.sadd(adel, argv[2]);
+    //    cout << "deleting a file: " << sendkey << endl;
+    redis.sadd(adel, sendkey);
   }
   
 }
