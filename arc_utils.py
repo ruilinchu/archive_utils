@@ -36,6 +36,12 @@ def put2tape(filepatho):
         r.srem("workingput",filepath) 
         return 1
 
+    # no small file less than 50M allowed
+    if ost.st_size < 52428800:
+        print("Error: file smaller than 50M")
+        r.srem("workingput",filepath)
+        return 1
+
     if uid != int(uido):
         r.srem("workingput",filepath)
         raise Exception("Alert: someone is sending redis key manually for other user's data !!!")

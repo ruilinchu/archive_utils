@@ -27,6 +27,11 @@ else:
     print("Error: input is not a file!")
     quit()
 
+# no small file less than 50M allowed
+if ost.st_size < 52428800:
+    print("Error: files smaller than 50M are not allowed, consider tar them up")
+    quit()
+
 # verify ownership
 if uid != getuid():
     print("Error: "+fullpath+" is not owned by you!")
